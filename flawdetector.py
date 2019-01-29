@@ -240,7 +240,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dir', required=False, help="Name of the directory to which defective images are saved")
     parser.add_argument('-f', '--vid', default=0, help="Name of the video file")
+    parser.add_argument('-l', '--loop', default=False, help="Loop video file")
     args = vars(parser.parse_args())
+    loop = args['loop']
     base_dir = args['dir']
     if base_dir == None:
        base_dir = os.getcwd()
@@ -296,6 +298,10 @@ if __name__ == '__main__':
         frame_count += 1
         object_count = "Object Number : {}".format(count_object)
 
+        # Loop if enabled and reached last frame
+        if loop and frame_count == capture.get(cv2.CAP_PROP_FRAME_COUNT):
+            frame_count = 0
+            capture = cv2.VideoCapture(path)
         # Check every given frame number (Number chosen based on the frequency of object on conveyor belt)
         if frame_count % frame_number == 0:
             defect = []
