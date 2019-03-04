@@ -54,35 +54,10 @@ WIDTH_OF_OBJ = 0
 
 OBJECT_COUNT = "Object Number : {}".format(COUNT_OBJECT)
 
-
-def build_argparser():
-    """
-    Parse the command line arguments.
-
-    :return: command line arguments
-    """
-    parser = ArgumentParser()
-    parser.add_argument('-dir', '--directory',
-                        required=False,
-                        help="Name of the directory to "
-                        "which defective images are saved")
-    parser.add_argument('-i', '--input',
-                        required=True,
-                        help="Required. Path to the video file. "
-                        "'CAM' for capturing video stream from camera.")
-    parser.add_argument("-d", "--distance",
-                        required=False,
-                        type=float,
-                        default=None,
-                        help="Distance between camera "
-                        "and object in millimeters")
-    parser.add_argument("-f", "--fieldofview",
-                        required=False,
-                        type=float,
-                        default=None,
-                        help="Field of view of camera")
-
-    return parser
+input = ''
+base_dir = os.getcwd()
+distance = 0
+fieldofview = 0
 
 
 def dimensions(box):
@@ -93,8 +68,10 @@ def dimensions(box):
     :return: Length and width of the object
     """
     (tl, tr, br, bl) = box
-    x = int(math.sqrt(math.pow((bl[0] - tl[0]), 2) + math.pow((bl[1] - tl[1]), 2)))
-    y = int(math.sqrt(math.pow((tl[0] - tr[0]), 2) + math.pow((tl[1] - tr[1]), 2)))
+    x = int(
+        math.sqrt(math.pow((bl[0] - tl[0]), 2) + math.pow((bl[1] - tl[1]), 2)))
+    y = int(
+        math.sqrt(math.pow((tl[0] - tr[0]), 2) + math.pow((tl[1] - tr[1]), 2)))
 
     if x > y:
         return x, y
@@ -161,7 +138,7 @@ def detect_orientation(frame, contours):
         defect_flag = True
         cv2.imwrite("{}/orientation/Orientation_{}.png"
                     .format(base_dir, COUNT_OBJECT),
-                    frame[y: y + h , x : x + w])
+                    frame[y: y + h, x: x + w])
         cv2.putText(frame, OBJECT_COUNT, (5, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     0.75, (255, 255, 255), 2)
         cv2.putText(frame, "Defect: {}".format(defect), (5, 140),
@@ -223,7 +200,7 @@ def detect_color(frame, cnt):
         x, y, w, h = cv2.boundingRect(cnt)
         print("Color defect detected in object {}".format(COUNT_OBJECT))
         cv2.imwrite("{}/color/Color_{}.png".format(base_dir, COUNT_OBJECT),
-                    frame[y : y + h, x : x + w])
+                    frame[y: y + h, x: x + w])
         cv2.putText(frame, OBJECT_COUNT, (5, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     0.75, (255, 255, 255), 2)
         cv2.putText(frame, "Defect: {}".format(defect), (5, 140),
@@ -279,7 +256,7 @@ def detect_crack(frame, cnt):
             x, y, w, h = cv2.boundingRect(cnt)
             print("Crack defect detected in object {}".format(COUNT_OBJECT))
             cv2.imwrite("{}/crack/Crack_{}.png".format(base_dir, COUNT_OBJECT),
-                        frame[y : y + h , x : x + w ])
+                        frame[y: y + h, x: x + w])
             cv2.putText(frame, OBJECT_COUNT, (5, 50), cv2.FONT_HERSHEY_SIMPLEX,
                         0.75, (255, 255, 255), 2)
             cv2.putText(frame, "Defect: {}".format(defect), (5, 140),
@@ -418,16 +395,18 @@ def flaw_detection():
                         OBJ_DEFECT.append(defect)
                         print("No defect detected in object {}"
                               .format(COUNT_OBJECT))
-                        cv2.putText(frame_nodefect, "Length (mm): {}".format(HEIGHT_OF_OBJ),
+                        cv2.putText(frame_nodefect,
+                                    "Length (mm): {}".format(HEIGHT_OF_OBJ),
                                     (5, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.75,
                                     (255, 255, 255), 2)
-                        cv2.putText(frame_nodefect, "Width (mm): {}".format(WIDTH_OF_OBJ),
+                        cv2.putText(frame_nodefect,
+                                    "Width (mm): {}".format(WIDTH_OF_OBJ),
                                     (5, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.75,
                                     (255, 255, 255), 2)
                         cv2.imwrite("{}/no_defect/Nodefect_{}.png".format(
                             base_dir, COUNT_OBJECT),
-                                    frame[y : y + h,
-                                          x : x + w])
+                            frame[y: y + h,
+                            x: x + w])
                     else:
                         value = 0
                         data_base.append(value)
@@ -476,52 +455,53 @@ def flaw_detection():
 
 if __name__ == '__main__':
 
-    args = build_argparser().parse_args()
-
-    base_dir = args.directory
-
-    if not base_dir:
-        base_dir = os.getcwd()
-
-    # Checks for the video file
-    if args.input:
-        if args.input == 'CAM':
-            cap = cv2.VideoCapture(0)
-            if not cap.isOpened():
-                print("\nCamera not plugged in... Exiting...\n")
-                sys.exit(0)
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            delay = (int)(1000 / fps)
-        else:
-            cap = cv2.VideoCapture(args.input)
-            if not cap.isOpened():
-                print("\nUnable to open video file... Exiting...\n")
-                sys.exit(0)
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            delay = (int)(1000 / fps)
-
-        if args.distance and args.fieldofview:
-            width_of_video = cap.get(3)
-            height_of_video = cap.get(4)
-            # Convert degrees to radians
-            radians = (args.fieldofview / 2) * 0.0174533
-            # Calculate the diagonal length of image in millimeters using
-            # field of view of camera and distance between object and camera.
-            diagonal_length_of_image_plane = abs(
-                2 * (args.distance / 10) * math.tan(radians))
-            # Calculate diagonal length of image in pixel
-            diagonal_length_in_pixel = math.sqrt(
-                math.pow(width_of_video, 2) + math.pow(height_of_video, 2))
-            # Convert one pixel value in millimeters
-            one_pixel_length = (diagonal_length_of_image_plane /
-                                diagonal_length_in_pixel)
-        # If distance between camera and object and field of view of camera
-        # are not provided, then 96 pixels per inch is considered.
-        # pixel_lengh = 2.54 cm (1 inch) / 96 pixels
-        else:
-            one_pixel_length = 0.0264583333
+    if "input" in os.environ:
+        input = os.environ["input"]
     else:
-        print("\nPlease provide video input... Exiting...\n")
+        print("Please provide input file...")
+        sys.exit()
+    if "distance" in os.environ:
+        distance = float(os.environ["distance"])
+    if "directory" in os.environ:
+        base_dir = os.environ["directory"]
+    if "fieldofview" in os.environ:
+        fieldofview = float(os.environ["fieldofview"])
+
+    if input == 'CAM':
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            print("\nCamera not plugged in... Exiting...\n")
+            sys.exit(0)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        delay = (int)(1000 / fps)
+    else:
+        cap = cv2.VideoCapture(input)
+        if not cap.isOpened():
+            print("\nUnable to open video file... Exiting...\n")
+            sys.exit(0)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        delay = (int)(1000 / fps)
+
+    if distance != 0 and fieldofview != 0:
+        width_of_video = cap.get(3)
+        height_of_video = cap.get(4)
+        # Convert degrees to radians
+        radians = (fieldofview / 2) * 0.0174533
+        # Calculate the diagonal length of image in millimeters using
+        # field of view of camera and distance between object and camera.
+        diagonal_length_of_image_plane = abs(
+            2 * (distance / 10) * math.tan(radians))
+        # Calculate diagonal length of image in pixel
+        diagonal_length_in_pixel = math.sqrt(
+            math.pow(width_of_video, 2) + math.pow(height_of_video, 2))
+        # Convert one pixel value in millimeters
+        one_pixel_length = (diagonal_length_of_image_plane /
+                            diagonal_length_in_pixel)
+    # If distance between camera and object and field of view of camera
+    # are not provided, then 96 pixels per inch is considered.
+    # pixel_lengh = 2.54 cm (1 inch) / 96 pixels
+    else:
+        one_pixel_length = 0.0264583333
 
     dir_names = ["crack", "color", "orientation", "no_defect"]
     OBJ_DEFECT = []
@@ -529,7 +509,7 @@ if __name__ == '__main__':
     FRAME_COUNT = 0
 
     # Get ipaddress from the get_ip_address
-    ipaddress, port, proxy,  = get_ip_address()
+    ipaddress, port, proxy, = get_ip_address()
     database = 'obj_flaw_database'
     client = InfluxDBClient(host=ipaddress, port=port,
                             database=database, proxies=proxy)
@@ -546,4 +526,3 @@ if __name__ == '__main__':
     # Find dimensions and flaw detections such as color, crack and orientation
     # of the object.
     flaw_detection()
-
