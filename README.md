@@ -19,7 +19,7 @@ This application also measures length and width of the object in millimeters.
 ## Requirements
 
 - Ubuntu 16.04
-- Intel® Distribution of OpenVINO™ 2018 R5 release toolkit
+- Intel® Distribution of OpenVINO™ toolkit 2019 R1 Release
 - Grafana* v5.3.2 
 - InfluxDB* v1.6.2
 
@@ -93,7 +93,7 @@ Save the images of defective objects in their respective folders. For example, o
 
 Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit by exporting environment variables:
 
-```source /opt/intel/computer_vision_sdk_2018.5.445/bin/setupvars.sh -pyver 3.5```
+```source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5```
 
 ## Run the Code
 

@@ -546,3 +546,4 @@ if __name__ == '__main__':
     # Find dimensions and flaw detections such as color, crack and orientation
     # of the object.
     flaw_detection()
+
