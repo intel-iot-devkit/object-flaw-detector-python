@@ -1,5 +1,4 @@
 
-
 # Object Flaw Detector
 
 | Details               |                   |
@@ -10,7 +9,7 @@
 
 This reference implementation is also [available in C++](https://github.com/intel-iot-devkit/reference-implementation-private/blob/object-flaw-measurement/object-flaw-detector-measurement/README.MD).
 
-## Introduction
+## What it does
 
 The object flaw detector application detects the anomalies such as color, crack, and orientation of the object moving on a conveyor belt. Anomalies are marked as defective and saved in the color, crack, orientation folders respectively. Also objects with no defects are saved in no_defect folder.
 These anomalies data is sent to InfluxDB* database and is visualized on Grafana*.
@@ -19,7 +18,7 @@ This application also measures length and width of the object in millimeters.
 ## Requirements
 
 - Ubuntu 16.04
-- Intel® Distribution of OpenVINO™ toolkit 2019 R1 Release
+- Intel® Distribution of OpenVINO™ toolkit 2019 R2 Release
 - Grafana* v5.3.2 
 - InfluxDB* v1.6.2
 
@@ -29,127 +28,171 @@ This application also measures length and width of the object in millimeters.
 
 Refer to [ Install the Intel® Distribution of OpenVINO™ toolkit for Linux*](https://software.intel.com/en-us/articles/OpenVINO-Install-Linux) for more information on how to install and set up the Intel® Distribution of OpenVINO™ toolkit
 
-### Install InfluxDB* 
-
-Use the commands below to install InfluxDB:
-
-```
-   sudo apt install curl
-   sudo curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add - 
-   source /etc/lsb-release
-   echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list
-   sudo apt-get update 
-   sudo apt-get install influxdb
-   sudo service influxdb start
-```
-
-### Install Grafana*
-
-Use the commands below to install Grafana:
-
-```
-   wget https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana_5.3.2_amd64.deb
-   sudo apt-get install -y adduser libfontconfig
-   sudo dpkg -i grafana_5.3.2_amd64.deb
-   sudo /bin/systemctl start grafana-server
-```
-
-### Install Python* Package Dependencies
-
-- InfluxDB 
-
-- Numpy
-
-  Run the following commands to install the Python dependencies:
-
-  ```
-    sudo apt-get install python3-pip
-    pip3 install influxdb
-    pip3 install numpy
-    pip3 install jupyter
-  ```
-
 ## How It works
 
 This application takes the input from a video camera or a video file for processing.
 
-![Data Flow Diagram](./images/dataFlow.png)
+![Data Flow Diagram](./docs/images/architectural_diagram.png)
 
 **Orientation defect detection:** Get the frame and change the color space to HSV format. Threshold the image based on the color of the object using [inRange](https://docs.opencv.org/master/df/d9d/tutorial_py_colorspaces.html) function to create a mask. Perform morphological opening and closing on the mask and find the contours using [findContours](https://docs.opencv.org/master/d4/d73/tutorial_py_contours_begin.html) function. Filter the contours based on the area. Perform [PCA](https://docs.opencv.org/master/d1/dee/tutorial_introduction_to_pca.html) (Principal Component Analysis) on the contours to get the orientation of the object.
 
-![orientation](./images/orientation.jpg)
+![orientation](./docs/images/orientation.jpg)
 
 **Color defect detection:** Threshold the image based on the defective color of the object using  [inRange](https://docs.opencv.org/master/df/d9d/tutorial_py_colorspaces.html) function. Use the mask obtained from the  [inRange](https://docs.opencv.org/master/df/d9d/tutorial_py_colorspaces.html) function to find the defective area.
 
-![color](./images/color.jpg)
+![color](./docs/images/color.jpg)
 
 **Crack detection:** Transform the image from BGR to Grayscale format using [cvtColor](https://docs.opencv.org/master/df/d9d/tutorial_py_colorspaces.html) function. Blur the image using [blur](https://docs.opencv.org/master/d4/d13/tutorial_py_filtering.html) function to remove the noises. Use the contours found on the blurred image to detect the cracks.
 
-![crack](./images/crack.jpg)
+![crack](./docs/images/crack.jpg)
 
 Save the images of defective objects in their respective folders. For example, objects with color defect are saved in **color** folder, objects with cracks are saved in **crack** folder, objects with orientation defect are saved in **orientation** folder and objects with no defect are stored in **no_defect** folder.
 
-## Set the Build Environment
+## Setup
 
-Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit by exporting environment variables:
+### Get the code
 
-```source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5```
+Steps to clone the reference implementation: (object-flaw-detector-python)
 
-## Run the Code
+    sudo apt-get update && sudo apt-get install git
+    git clone https://github.com/intel-iot-devkit/object-flaw-detector-python.git
+    
+### Install Intel® Distribution of OpenVINO™ toolkit
+Before running the application, install the Intel® Distribution of OpenVINO™ toolkit. For details, see [Installing the Intel® Distribution of OpenVINO™ toolkit for Linux*](https://software.intel.com/en-us/openvino-toolkit/choose-download/free-download-linux)
 
-- Go to object-flaw-detector-python directory:
+### Other dependencies
+#### InfluxDB*
+InfluxDB is a time series database designed to handle high write and query loads. It is an integral component of the TICK stack. InfluxDB is meant to be used as a backing store for any use case involving large amounts of timestamped data, including DevOps monitoring, application metrics, IoT sensor data, and real-time analytics.
 
-  ```cd <path_to_object-flaw-detector-python_directory>```
+#### Grafana*
+Grafana is an open-source, general purpose dashboard and graph composer, which runs as a web application. It supports Graphite, InfluxDB, Prometheus, Google Stackdriver, AWS CloudWatch, Azure Monitor, Loki, MySQL, PostgreSQL, Microsoft SQL Server, Testdata, Mixed, OpenTSDB and Elasticsearch as backends. Grafana allows you to query, visualize, alert on and understand your metrics no matter where they are stored.
+
+To install the dependencies of the RI, run the below command:
+   ```
+   cd <path_to_the_object-flaw-detector-python_directory>
+   ./setup.sh
+   ```
+### The Config File
+
+The _resources/config.json_ contains the path to the videos that will be used by the application.
+The _config.json_ file is of the form name/value pair, `video: <path/to/video>`   
+
+Example of the _config.json_ file:
+
+```
+{
+
+    "inputs": [
+	    {
+            "video": "videos/video1.mp4"
+        }
+    ]
+}
+```
+
+### Which Input video to use
+
+The application works with any input video. Find sample videos for object detection [here](https://github.com/intel-iot-devkit/sample-videos/).  
+
+For first-use, we recommend using the [bolt-detection](https://github.com/intel-iot-devkit/sample-videos/blob/master/bolt-detection.mp4) video.The video is automatically downloaded to the `resources/` folder.
+For example: <br>
+The config.json would be:
+
+```
+{
+
+    "inputs": [
+	    {
+            "video": "sample-videos/bolt-detection.mp4"
+        }
+    ]
+}
+```
+To use any other video, specify the path in config.json file
+
+### Using the Camera instead of video
+
+Replace the path/to/video in the _resources/config.json_  file with the camera ID, where the ID is taken from the video device (the number X in /dev/videoX).   
+
+On Ubuntu, list all available video devices with the following command:
+
+```
+ls /dev/video*
+```
+
+For example, if the output of above command is /dev/video0, then config.json would be::
+
+```
+{
+
+    "inputs": [
+	    {
+            "video": "0"
+        }
+    ]
+}
+```
+
+### Setup the Environment
+
+Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit once per session by running the **source** command on the command line:
+```
+source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5
+```
+__Note__: This command needs to be executed only once in the terminal where the application will be executed. If the terminal is closed, the command needs to be executed again.
+
+## Run the Application
+
+- Change the current directory to the git-cloned application code location on your system:
+  
+  ```
+  cd <path-to-object-flaw-detector-python>/application
+  ```
 
 - To see a list of the help options:
 
-  ```python3 flawdetector.py --help``` 
+  ```
+  python3 object_flaw_detector.py --help
+  ``` 
 
 - Input source can be a video file or a camera.
 
-  - If using the video input from a file, run the command below:
-
     - To save defective images in a specific directory
 
-      ```python3.5 flawdetector.py -dir <path_to_the_directory_to_dump_defective_images> -i data/object-flaw-detector.mp4```
+      ```
+      python3.5 object_flaw_detector.py -dir <path_to_the_directory_to_dump_defective_images>
+      ```
 
     - To save defective images in current working directory
 
-      ```python3.5 flawdetector.py -i data/object-flaw-detector.mp4```
-
-  - If using a live feed from camera, run the command below:
-
-    - To save defective images in a specific directory
-
-      ```python3.5 flawdetector.py -dir <path_to_the_directory_to_dump_defective_images> -i CAM```
-
-    - To save defective images in current working directory
-
-      ```python3.5 flawdetector.py -i CAM```
+      ```
+      python3.5 object_flaw_detector.py
+      ```
 
     **Optional:** If field of view and distance between the object and camera are available use ```-fv```  and ```-dis``` command line arguments respectively. Otherwise camera of 96 pixels per inch is considered by default. For example:
 
-       ```python3.5 flawdetector.py -i data/object-flaw-detector.mp4 -f 60 -d 50```
+      python3.5 object_flaw_detector.py -f 60 -d 50
 
      **Note:** User can get field of view from camera specifications. The values for ```-f``` and ```-d``` should be in __degrees__ and __millimeters__ respectively.
 
 - To check the data on InfluxDB, run the following commands:
 
-  ```influx```
+```
+influx
+show databases
+use obj_flaw_database
+select * from obj_flaw_detector
+```
 
-  ```show databases```
-
-  ```use obj_flaw_database```
-
-  ```select * from obj_flaw_detector```
-
-### Data Visualization
+### Visualize on Grafana
 
 - If you wish to import settings to visualise the data on Grafana, follow steps below.
 
   1. On the terminal, run the following command:
 
-     ```sudo service grafana-server start```
+     ```
+     sudo service grafana-server start
+     ```
 
   2. In your browser, go to localhost:3000.
 
@@ -181,7 +224,9 @@ Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit
 
   1. On the terminal, run the following command.
 
-     ```sudo service grafana-server start```
+     ```
+     sudo service grafana-server start
+     ```
 
   2. Open the browser, go to **localhost:3000**.
 
@@ -197,7 +242,7 @@ Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit
      - *Database*: obj_flaw_database
      - Click on “Save and Test”
 
-      ![Grafana1](./images/grafana1.png)
+      ![Grafana1](./docs/images/grafana1.png)
 
   6. To create a new Dashboard
 
@@ -212,7 +257,7 @@ Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit
      - On the **Time range** tab, change the **override relative time** to **100s**.
      - Save the dashboard with name **flaw_detector**.
 
-     ![Grafana2](./images/grafana2.png)
+     ![Grafana2](./docs/images/grafana2.png)
 
   7. Click on the **add panel** icon on the top menu.
 
@@ -240,11 +285,11 @@ Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit
       - Log in with user as **admin** and password as **admin**.
       - The **“Home Dashboard”** shows up the list of starred and Recently viewed dashboards. Select **flaw_detector**. 
 
-      ![Grafana3](./images/grafana3.png)
+      ![Grafana3](./docs/images/grafana3.png)
 
   12. Run the Python code again on the terminal to visualize data on Grafana.
 
-      ![Grafana4](./images/grafana4.png) 
+      ![Grafana4](./docs/images/grafana4.png) 
 
 ## (Optional) Save Data to the Cloud
 
