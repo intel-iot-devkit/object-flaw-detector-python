@@ -3,8 +3,8 @@
 
 | Details               |                   |
 | --------------------- | ----------------- |
-| Target OS:            | Ubuntu* 16.04 LTS |
-| Programming Language: | Python* 3.5       |
+| Target OS:            | Ubuntu* 18.04 LTS |
+| Programming Language: | Python* 3.6       |
 | Time to complete:     | 30 min            |
 
 This reference implementation is also [available in C++](https://github.com/intel-iot-devkit/reference-implementation-private/blob/object-flaw-measurement/object-flaw-detector-measurement/README.MD).
@@ -17,8 +17,8 @@ This application also measures length and width of the object in millimeters.
 
 ## Requirements
 
-- Ubuntu 16.04
-- Intel® Distribution of OpenVINO™ toolkit 2019 R2 Release
+- Ubuntu 18.04
+- Intel® Distribution of OpenVINO™ toolkit 2020 R3 Release
 - Grafana* v5.3.2 
 - InfluxDB* v1.6.2
 - Jupyter* Notebook v5.7.0
@@ -138,8 +138,9 @@ For example, if the output of above command is /dev/video0, then config.json wou
 
 Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit once per session by running the **source** command on the command line:
 ```
-source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5
+source /opt/intel/openvino/bin/setupvars.sh
 ```
+
 __Note__: This command needs to be executed only once in the terminal where the application will be executed. If the terminal is closed, the command needs to be executed again.
 
 ## Run the Code on Juptyer*
@@ -299,7 +300,9 @@ select * from obj_flaw_detector
 
 12. Run the Python code again on the terminal to visualize data on Grafana.
 
-    ![Grafana4](../docs/images/grafana4.png) 
+    ![Grafana4](../docs/images/grafana4.png)
+
+**NOTE :** From the top right corner of the dashboard, select the **Range** option and set the **Refreshing every** option to **5s**. 
 
 ## (Optional) Save Data to the Cloud
 

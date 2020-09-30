@@ -3,8 +3,8 @@
 
 | Details               |                   |
 | --------------------- | ----------------- |
-| Target OS:            | Ubuntu* 16.04 LTS |
-| Programming Language: | Python* 3.5       |
+| Target OS:            | Ubuntu* 18.04 LTS |
+| Programming Language: | Python* 3.6       |
 | Time to complete:     | 30 min            |
 
 This reference implementation is also [available in C++](https://github.com/intel-iot-devkit/reference-implementation-private/blob/object-flaw-measurement/object-flaw-detector-measurement/README.MD).
@@ -17,8 +17,8 @@ This application also measures length and width of the object in millimeters.
 
 ## Requirements
 
-- Ubuntu 16.04
-- Intel® Distribution of OpenVINO™ toolkit 2019 R2 Release
+- Ubuntu 18.04
+- Intel® Distribution of OpenVINO™ toolkit 2020 R3 Release
 - Grafana* v5.3.2 
 - InfluxDB* v1.6.2
 
@@ -137,7 +137,7 @@ For example, if the output of above command is /dev/video0, then config.json wou
 
 Configure the environment to use the Intel® Distribution of OpenVINO™ toolkit once per session by running the **source** command on the command line:
 ```
-source /opt/intel/openvino/bin/setupvars.sh -pyver 3.5
+source /opt/intel/openvino/bin/setupvars.sh
 ```
 __Note__: This command needs to be executed only once in the terminal where the application will be executed. If the terminal is closed, the command needs to be executed again.
 
@@ -160,18 +160,18 @@ __Note__: This command needs to be executed only once in the terminal where the 
     - To save defective images in a specific directory
 
       ```
-      python3.5 object_flaw_detector.py -dir <path_to_the_directory_to_dump_defective_images>
+      python3 object_flaw_detector.py -dir <path_to_the_directory_to_dump_defective_images>
       ```
 
     - To save defective images in current working directory
 
       ```
-      python3.5 object_flaw_detector.py
+      python3 object_flaw_detector.py
       ```
 
     **Optional:** If field of view and distance between the object and camera are available use ```-fv```  and ```-dis``` command line arguments respectively. Otherwise camera of 96 pixels per inch is considered by default. For example:
 
-      python3.5 object_flaw_detector.py -f 60 -d 50
+      python3 object_flaw_detector.py -f 60 -d 50
 
      **Note:** User can get field of view from camera specifications. The values for ```-f``` and ```-d``` should be in __degrees__ and __millimeters__ respectively.
 
@@ -289,7 +289,9 @@ select * from obj_flaw_detector
 
   12. Run the Python code again on the terminal to visualize data on Grafana.
 
-      ![Grafana4](./docs/images/grafana4.png) 
+      ![Grafana4](./docs/images/grafana4.png)
+
+**NOTE :** From the top right corner of the dashboard, select the **Range** option and set the **Refreshing every** option to **5s**.
 
 ## (Optional) Save Data to the Cloud
 
